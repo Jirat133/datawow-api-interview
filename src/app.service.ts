@@ -139,9 +139,9 @@ export class AppService {
 
   deleteComment(commentId: number, body: any): CommentDto | null {
     const commentIndex = this.comments.findIndex(c => c.id === commentId);
-    const user = this.users.find(u => u.username === body.author);
-    if (!user) {
-      throw new Error('You are not the author of this comment.');
+    const comment = this.comments.find(c => c.id === commentId && c.author === body.author);
+    if (!comment) {
+      throw new Error('Comment not found or you are not the author.');
     }
     if (commentIndex === -1) {
       throw new Error('Comment not found.');
