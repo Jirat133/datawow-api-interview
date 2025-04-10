@@ -7,7 +7,7 @@ import { CommentDto } from './dto/comment.dto';
 @Controller()
 export class AppController {
 
-  constructor(private readonly appService: AppService) {}
+  constructor(private readonly appService: AppService) { }
   @Get()
   getHello(): string {
     return 'Hello World!';
@@ -63,7 +63,7 @@ export class AppController {
     @Param('postId') postId: number,
     @Body() body,
   ) {
-    return this.appService.editPost(postId,body);
+    return this.appService.editPost(postId, body);
   }
 
   @Post('comments')
@@ -75,9 +75,9 @@ export class AppController {
   @Patch('comments/:commentId')
   editComment(
     @Param('commentId') commentId: number,
-    @Body() body: { userId: number; content: string },
+    @Body() body,
   ) {
-    return this.appService.editComment(commentId, body.userId, body.content);
+    return this.appService.editComment(commentId, body.author, body.content);
   }
 
   @Delete('posts/:postId')
@@ -86,7 +86,16 @@ export class AppController {
     return post;
   }
 
+  @Delete('comments/:commentId')
+  deleteComment(
+    @Param('commentId') commentId: number,
+    @Body() body
+  ) {
+    const post = this.appService.deleteComment(commentId, body);
+    return post;
+  }
 
-  
+
+
 
 }

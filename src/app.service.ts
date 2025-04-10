@@ -82,9 +82,13 @@ export class AppService {
     return this.posts[postIndex];
   }
 
-  editComment(commentId: number, userId: number, newContent: string): string {
-    const user = this.users.find(u => u.id === userId);
-    const comment = this.comments.find(c => c.id === commentId && c.author === user?.username);
+  editComment(commentId: number, author: string, newContent: string): CommentDto {
+    console.log(`Params: ${commentId}, ${author}, ${newContent}`);
+    const user = this.users.find(u => u.username === author);
+    if(!user) {
+      throw new Error('User not found.');
+    }
+    const comment = this.comments.find(c => c.id === commentId && c.author === author);
     if (!comment) {
       throw new Error('Comment not found or you are not the userId.');
     }
@@ -94,7 +98,7 @@ export class AppService {
     if (index !== -1) {
       this.comments[index] = comment;
     }
-    return `Comment updated successfully.`;
+    return comment;
   }
 
   getFeed(): PostResponseDto[] {
@@ -131,6 +135,26 @@ export class AppService {
 
 
     return deletedPost;
+  }
+
+  deleteComment(commentId: number, body: any): CommentDto | null {
+    const commentIndex = this.comments.findIndex(c => c.id === commentId);
+    const user = this.users.find(u => u.username === body.author);
+    if (!user) {
+      throw new Error('You are not the author of this comment.');
+    }
+    if (commentIndex === -1) {
+      throw new Error('Comment not found.');
+    }
+    const deletedComment = this.comments[commentIndex];
+    //Delete comment
+    this.comments.splice(commentIndex, 1);
+    //Delete comment from post
+    const postIndex = this.posts.findIndex(p => p.id === deletedComment.postId);
+    if (postIndex !== -1) {
+      this.posts[postIndex].comments = this.posts[postIndex].comments?.filter(c => c.id !== commentId) || [];
+    }
+    return deletedComment;
   }
 
   editPost(postId: number, body: PostDto): PostDto | null {
