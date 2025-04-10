@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Body, Post, Patch } from '@nestjs/common';
+import { Controller, Get, Param, Body, Post, Patch, Delete } from '@nestjs/common';
 import { AppService } from './app.service';
 import { PostDto } from './dto/post.dto';
 import { UserDto } from './dto/user.dto';
@@ -24,6 +24,20 @@ export class AppController {
     }
 
     return this.appService.signIn(body.username);
+  }
+
+  @Get('feed')
+  getFeed() {
+    return this.appService.getFeed();
+  }
+
+  @Get('profile/:userId')
+  getUserProfile(@Param('userId') userId: number) {
+    return this.appService.getUserProfile(userId);
+  }
+  @Get('posts/tags/:tag')
+  getPostsByTag(@Param('tag') tag: string) {
+    return this.appService.getPostsByTag(tag);
   }
 
   @Get('postDetail/:postId')
@@ -58,18 +72,13 @@ export class AppController {
     return this.appService.editComment(commentId, body.userId, body.content);
   }
 
-  @Get('feed')
-  getFeed() {
-    return this.appService.getFeed();
+  @Delete('posts/:postId')
+  deletePost(@Param('postId') postId: number) {
+    const post = this.appService.deletePost(postId);
+    return post;
   }
 
-  @Get('profile/:userId')
-  getUserProfile(@Param('userId') userId: number) {
-    return this.appService.getUserProfile(userId);
-  }
-  @Get('posts/tags/:tag')
-  getPostsByTag(@Param('tag') tag: string) {
-    return this.appService.getPostsByTag(tag);
-  }
+
+  
 
 }

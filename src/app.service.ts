@@ -116,5 +116,15 @@ export class AppService {
   getPostsByTag(tag: string): PostDto[] {
     return this.posts.filter(post => post.tags.includes(tag));
   }
+
+  deletePost(postId: number): PostDto | null {
+    const postIndex = this.posts.findIndex(p => p.id === postId);
+    if (postIndex === -1) {
+      throw new Error('Post not found.');
+    }
+    const deletedPost = this.posts[postIndex];
+    this.posts.splice(postIndex, 1);
+    return deletedPost;
+  }
  
 }
