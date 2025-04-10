@@ -41,15 +41,14 @@ export class AppService {
 
 
   createPost(post: PostDto): PostDto {
-    console.log('post', post);
-    console.log(this.users)
     const userExists = this.users.find(u => u.username === post.author);
     if (!userExists) {
       throw new Error('User does not exist.');
     }
-    post.id = this.posts.length + 1;
-    post.createdAt = new Date();  
-    post.updatedAt = new Date();  
+    const maxId = this.posts.length > 0 ? Math.max(...this.posts.map(p => p.id)) : 0;
+    post.id = maxId + 1;
+    post.createdAt = new Date();
+    post.updatedAt = new Date();
     this.posts.push(post);
     return post;
   }
@@ -70,7 +69,8 @@ export class AppService {
     }
     comment.createdAt = new Date();
     comment.updatedAt = new Date();
-    comment.id = this.comments.length + 1;
+    const maxId = this.comments.length > 0 ? Math.max(...this.comments.map(p => p.id)) : 0;
+    comment.id = maxId + 1;
     this.comments.push(comment);
     const postIndex = this.posts.findIndex(p => p.id === comment.postId);
 
@@ -122,16 +122,22 @@ export class AppService {
     if (postIndex === -1) {
       throw new Error('Post not found.');
     }
+
+    //Delete comments associated with the post
+    this.comments = this.comments.filter(c => c.postId !== postId);
+    //Delete post
     const deletedPost = this.posts[postIndex];
     this.posts.splice(postIndex, 1);
+
+
     return deletedPost;
   }
 
-  editPost(postId: number,body: PostDto): PostDto | null {
+  editPost(postId: number, body: PostDto): PostDto | null {
     const { author, title, content } = body;
     const user = this.users.find(u => u.username === author);
     const post = this.posts.find(p => p.id === postId && p.author === user?.username);
-    if(!user) {
+    if (!user) {
       throw new Error('User not found or you are not the writer.');
     }
     if (!post) {
@@ -147,5 +153,5 @@ export class AppService {
     }
     return post;
   }
- 
+
 }
