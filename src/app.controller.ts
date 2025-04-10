@@ -58,6 +58,14 @@ export class AppController {
     return this.appService.createPost(body);
   }
 
+  @Patch('posts/:postId')
+  editPost(
+    @Param('postId') postId: number,
+    @Body() body,
+  ) {
+    return this.appService.editPost(postId,body);
+  }
+
   @Post('comments')
   commentOnPost(@Body() body) {
     console.log('body', body);

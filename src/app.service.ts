@@ -114,7 +114,7 @@ export class AppService {
   }
 
   getPostsByTag(tag: string): PostDto[] {
-    return this.posts.filter(post => post.tags.includes(tag));
+    return this.posts.filter(post => post.tag.includes(tag));
   }
 
   deletePost(postId: number): PostDto | null {
@@ -125,6 +125,27 @@ export class AppService {
     const deletedPost = this.posts[postIndex];
     this.posts.splice(postIndex, 1);
     return deletedPost;
+  }
+
+  editPost(postId: number,body: PostDto): PostDto | null {
+    const { author, title, content } = body;
+    const user = this.users.find(u => u.username === author);
+    const post = this.posts.find(p => p.id === postId && p.author === user?.username);
+    if(!user) {
+      throw new Error('User not found or you are not the writer.');
+    }
+    if (!post) {
+      throw new Error('Post not found.');
+    }
+    post.title = title;
+    post.content = content;
+    post.tag = body.tag;
+    post.updatedAt = new Date();
+    const index = this.posts.findIndex(p => p.id === postId);
+    if (index !== -1) {
+      this.posts[index] = post;
+    }
+    return post;
   }
  
 }
