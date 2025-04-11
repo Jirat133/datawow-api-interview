@@ -1,22 +1,22 @@
 import { CommentDto } from './comment.dto';
 export interface PostDto {
-    id: number; // Unique identifier for the post
-    title: string; // Title of the post
-    content: string; // Content of the post
-    tag: string; // Tag associated with the post
-    author: string; // Author of the post
-    createdAt: Date; // Timestamp when the post was created
-    updatedAt?: Date; // Optional timestamp for when the post was last updated
-    comments?: CommentDto[]; // Optional list of comments associated with the post
+    id: number; 
+    title: string; 
+    content: string; 
+    tag: string; 
+    author: string; 
+    createdAt: Date; 
+    updatedAt?: Date; 
+    comments?: CommentDto[]; 
 }
 
 export interface PostResponseDto {
-    id: number; // Unique identifier for the post
-    title: string; // Title of the post
-    content: string; // Content of the post
-    tag: string; // Tag associated with the post
-    author: string; // Author of the post
-    createdAt: Date; // Timestamp when the post was created
-    updatedAt?: Date; // Optional timestamp for when the post was last updated
-    comments?: CommentDto[]; // Optional list of comments associated with the post
+    id: number; 
+    title: string; 
+    content: string; 
+    tag: string; 
+    author: string; 
+    createdAt: Date; 
+    updatedAt?: Date;
+    comments?: CommentDto[]; 
 }
