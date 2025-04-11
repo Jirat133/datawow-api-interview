@@ -3,6 +3,7 @@ import { AppService } from './app.service';
 import { PostDto } from './dto/post.dto';
 import { UserDto } from './dto/user.dto';
 import { CommentDto } from './dto/comment.dto';
+import { Response } from './dto/response.dto';
 
 @Controller()
 export class AppController {
@@ -15,7 +16,6 @@ export class AppController {
 
   @Post('signin')
   signIn(@Body() body) {
-    console.log('body', body);
     if (!body.username) {
       throw new Error('Username is required');
     }
@@ -31,10 +31,6 @@ export class AppController {
     return this.appService.getFeed();
   }
 
-  @Get('profile/:userId')
-  getUserProfile(@Param('userId') userId: number) {
-    return this.appService.getUserProfile(userId);
-  }
   @Get('posts/tags/:tag')
   getPostsByTag(@Param('tag') tag: string) {
     return this.appService.getPostsByTag(tag);
@@ -68,7 +64,6 @@ export class AppController {
 
   @Post('comments')
   commentOnPost(@Body() body) {
-    console.log('body', body);
     return this.appService.commentOnPost(body);
   }
 
@@ -94,8 +89,5 @@ export class AppController {
     const post = this.appService.deleteComment(commentId, body);
     return post;
   }
-
-
-
 
 }

@@ -1,7 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { PostDto, PostResponseDto } from './dto/post.dto';
 import { UserDto } from './dto/user.dto';
 import { CommentDto } from './dto/comment.dto';
+import { Response } from './dto/response.dto';
+
 
 @Injectable()
 export class AppService {
@@ -10,24 +12,21 @@ export class AppService {
   private comments: CommentDto[] = [];
   private currentUser: UserDto;
 
+  
+
   signIn(username: string): UserDto {
     const existingUser = this.users.find(u => {
-      console.log('SignIn:', u.username, username);
-      console.log('SignIn:', u.username === username);
       return (u.username === username)
     });
     let user
     if (!existingUser) {
       user = { id: this.users.length + 1, username }
       this.users.push(user);
-      console.log('User created:', user, this.users);
     }
     if (existingUser) {
       user = existingUser
     }
     this.currentUser = user
-    console.log('user', this.users)
-    console.log('user created:', user);
     return user;
   }
 
@@ -40,32 +39,37 @@ export class AppService {
   }
 
 
-  createPost(post: PostDto): PostDto {
+  createPost(post: PostDto): Response {
     const userExists = this.users.find(u => u.username === post.author);
     if (!userExists) {
-      throw new Error('User does not exist.');
+      throw new BadRequestException('User does not exist.');
+    }
+    if(!(post.tag) || !(post.content) || !(post.title)){
+      throw new BadRequestException('Post content, title or tag is missing.');
     }
     const maxId = this.posts.length > 0 ? Math.max(...this.posts.map(p => p.id)) : 0;
     post.id = maxId + 1;
     post.createdAt = new Date();
     post.updatedAt = new Date();
     this.posts.push(post);
-    return post;
+    return {
+      statusCode: 201,
+      message: 'Post created successfully',
+      data: post,
+    };
   }
 
-  commentOnPost(comment: CommentDto): PostDto {
-    if (!comment.author) {
-      throw new Error('Comment author is undefined.');
+  commentOnPost(comment: CommentDto): Response {
+    if (!comment.content) {
+      throw new BadRequestException('Comment content is required.');
     }
     const userExists = this.users.find(u => u.username === comment.author);
     const postExists = this.posts.find(p => p.id === comment.postId);
-    console.log('post', this.posts)
-    console.log('comment', comment)
     if (!userExists) {
-      throw new Error('User does not exist.');
+      throw new NotFoundException('User does not exist.');
     }
     if (!postExists) {
-      throw new Error('Post does not exist.');
+      throw new NotFoundException('Post does not exist.');
     }
     comment.createdAt = new Date();
     comment.updatedAt = new Date();
@@ -78,19 +82,24 @@ export class AppService {
       this.posts[postIndex].comments = [];
     }
     this.posts[postIndex].comments.push(comment);
-    console.log('THIS.POSTS', this.posts)
-    return this.posts[postIndex];
+    return {
+      statusCode: 201,
+      message: 'Comment added successfully',
+      data: this.posts[postIndex],
+    };
   }
 
-  editComment(commentId: number, author: string, newContent: string): CommentDto {
-    console.log(`Params: ${commentId}, ${author}, ${newContent}`);
+  editComment(commentId: number, author: string, newContent: string): Response{
     const user = this.users.find(u => u.username === author);
     if(!user) {
-      throw new Error('User not found.');
+      throw new NotFoundException('User not found.');
+    }
+    if(!newContent) {
+      throw new BadRequestException('Comment content is required.');
     }
     const comment = this.comments.find(c => c.id === commentId && c.author === author);
     if (!comment) {
-      throw new Error('Comment not found or you are not the userId.');
+      throw new NotFoundException('Comment not found or you are not the author.');
     }
     comment.content = newContent;
     comment.updatedAt = new Date();
@@ -98,18 +107,15 @@ export class AppService {
     if (index !== -1) {
       this.comments[index] = comment;
     }
-    return comment;
+    return {
+      statusCode: 200,
+      message: 'Comment updated successfully',
+      data: comment,
+    };
   }
 
   getFeed(): PostResponseDto[] {
     return this.posts;
-    // return this.posts.map(post => {
-    //   const { userId, ...postToDisplay } = post;
-    //   return {
-    //     ...postToDisplay,
-    //     author: this.users.find(u => u.id === post.userId)?.username || '',
-    //   }
-    // })
   }
 
   getUserProfile(id: number): { posts: PostDto[]; } {
@@ -121,10 +127,11 @@ export class AppService {
     return this.posts.filter(post => post.tag.includes(tag));
   }
 
-  deletePost(postId: number): PostDto | null {
-    const postIndex = this.posts.findIndex(p => p.id === postId);
+  deletePost(postId: number): Response {
+    const postIndex = this.posts.findIndex(p => p.id === postId && p.author === this.currentUser.username);
+
     if (postIndex === -1) {
-      throw new Error('Post not found.');
+      throw new NotFoundException('Post not found.');
     }
 
     //Delete comments associated with the post
@@ -134,17 +141,21 @@ export class AppService {
     this.posts.splice(postIndex, 1);
 
 
-    return deletedPost;
+    return {
+      statusCode: 200,
+      message: 'Post deleted successfully',
+      data: deletedPost,
+    };
   }
 
-  deleteComment(commentId: number, body: any): CommentDto | null {
+  deleteComment(commentId: number, body: any): Response {
     const commentIndex = this.comments.findIndex(c => c.id === commentId);
-    const comment = this.comments.find(c => c.id === commentId && c.author === body.author);
-    if (!comment) {
-      throw new Error('Comment not found or you are not the author.');
+    const commentAuthor = this.comments.find(c => c.id === commentId && c.author === body.author);
+    if (!commentAuthor) {
+      throw new BadRequestException('You are not the author.');
     }
     if (commentIndex === -1) {
-      throw new Error('Comment not found.');
+      throw new NotFoundException('Comment not found.');
     }
     const deletedComment = this.comments[commentIndex];
     //Delete comment
@@ -154,28 +165,39 @@ export class AppService {
     if (postIndex !== -1) {
       this.posts[postIndex].comments = this.posts[postIndex].comments?.filter(c => c.id !== commentId) || [];
     }
-    return deletedComment;
+    return {
+      statusCode: 200,
+      message: 'Comment deleted successfully',
+      data: deletedComment,
+    };
   }
 
-  editPost(postId: number, body: PostDto): PostDto | null {
-    const { author, title, content } = body;
+  editPost(postId: number, body: PostDto): Response {
+    const { author, title, content, tag } = body;
     const user = this.users.find(u => u.username === author);
     const post = this.posts.find(p => p.id === postId && p.author === user?.username);
     if (!user) {
-      throw new Error('User not found or you are not the writer.');
+      throw new NotFoundException('User not found.');
     }
     if (!post) {
-      throw new Error('Post not found.');
+      throw new NotFoundException('You are not the writer or post doesn\'t exist.');
+    }
+    if(!title || !content || tag) {
+      throw new BadRequestException('Post title, content or tag is missing.');
     }
     post.title = title;
     post.content = content;
-    post.tag = body.tag;
+    post.tag = tag;
     post.updatedAt = new Date();
     const index = this.posts.findIndex(p => p.id === postId);
     if (index !== -1) {
       this.posts[index] = post;
     }
-    return post;
+    return {
+      statusCode: 200,
+      message: 'Post updated successfully',
+      data: post,
+    };
   }
 
 }
