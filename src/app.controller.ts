@@ -77,8 +77,7 @@ export class AppController {
 
   @Delete('posts/:postId')
   deletePost(@Param('postId') postId: number) {
-    const post = this.appService.deletePost(postId);
-    return post;
+    return this.appService.deletePost(postId);
   }
 
   @Delete('comments/:commentId')
@@ -86,8 +85,7 @@ export class AppController {
     @Param('commentId') commentId: number,
     @Body() body
   ) {
-    const post = this.appService.deleteComment(commentId, body);
-    return post;
+    return this.appService.deleteComment(commentId, body);
   }
 
 }

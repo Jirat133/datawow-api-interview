@@ -131,7 +131,7 @@ export class AppService {
     const postIndex = this.posts.findIndex(p => p.id === postId && p.author === this.currentUser.username);
 
     if (postIndex === -1) {
-      throw new NotFoundException('Post not found.');
+      throw new NotFoundException('Post not found or You are not the author');
     }
 
     //Delete comments associated with the post
