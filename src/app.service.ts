@@ -182,7 +182,7 @@ export class AppService {
     if (!post) {
       throw new NotFoundException('You are not the writer or post doesn\'t exist.');
     }
-    if(!title || !content || tag) {
+    if(!title || !content || !tag) {
       throw new BadRequestException('Post title, content or tag is missing.');
     }
     post.title = title;
